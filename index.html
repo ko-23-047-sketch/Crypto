@@ -3,31 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CryptoHub: Адаптивный шифратор</title>
+    <title>CryptoHub Pro</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="light-theme"> <div class="container">
+<body class="light-theme">
+
+<div class="container">
     <div class="header">
         <h1>CryptoHub</h1>
         <button id="themeToggle" onclick="toggleTheme()">🌙 Темная тема</button>
     </div>
     
     <div class="main-layout">
-        <div class="input-section">
-            <label>Исходный текст:</label>
-            <textarea id="inputText" placeholder="Введите текст..."></textarea>
-        </div>
+        <label>Исходный текст:</label>
+        <textarea id="inputText" placeholder="Введите текст для обработки..."></textarea>
 
         <div class="controls">
             <div class="control-group">
-                <label>Выберите шифр:</label>
+                <label>Шифр:</label>
                 <select id="cipherSelect" onchange="updateUI()">
                     <option value="caesar">Шифр Цезаря</option>
-                    <option value="morse">Азбука Морзе</option>
                     <option value="atbash">Шифр Атбаша</option>
                     <option value="vigenere">Шифр Виженера</option>
                     <option value="gronsfeld">Шифр Гронсфельда</option>
+                    <option value="morse">Азбука Морзе</option>
+                    <option value="polybius">Квадрат Полибия</option>
+                    <option value="bacon">Шифр Бэкона</option>
+                    <option value="playfair">Шифр Плейфера</option>
                     <option value="hill">Шифр Хилла</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>Язык:</label>
+                <select id="langSelect" onchange="updateUI()">
+                    <option value="ru">Русский</option>
+                    <option value="en">English</option>
                 </select>
             </div>
 
@@ -38,7 +49,7 @@
                 </div>
                 <div id="keyWrap" style="display:none;">
                     <label>Ключ:</label>
-                    <input type="text" id="keyInput" placeholder="Ключ...">
+                    <input type="text" id="keyInput" placeholder="Текст или цифры">
                 </div>
             </div>
         </div>
@@ -48,13 +59,10 @@
             <button class="btn decrypt-btn" onclick="process(false)">Расшифровать</button>
         </div>
 
-        <div class="output-section">
-            <label>Результат:</label>
-            <textarea id="outputText" readonly></textarea>
-        </div>
+        <label>Результат:</label>
+        <textarea id="outputText" readonly></textarea>
 
         <div id="matrixDisplay" class="matrix-container">
-            <strong>Матрица / Таблица ключа:</strong>
             <div id="matrixContent"></div>
         </div>
     </div>
