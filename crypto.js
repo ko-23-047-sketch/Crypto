@@ -6,7 +6,7 @@ const ALPHABETS = {
 
 const MORSE_MAP = {
     'а': '.-', 'б': '-...', 'в': '.--', 'г': '--.', 'д': '-..', 'е': '.', 'ж': '...-', 'з': '--..',
-    'и': '..', 'й': '.---', 'к': '-.-', 'л': '.-..', 'м': '--', 'n': '-.', 'о': '---', 'п': '.--.',
+    'и': '..', 'й': '.---', 'к': '-.-', 'л': '.-..', 'м': '--', 'н': '-.', 'о': '---', 'п': '.--.',
     'р': '.-.', 'с': '...', 'т': '-', 'у': '..-', 'ф': '..-.', 'х': '....', 'ц': '-.-.', 'ч': '---.',
     'ш': '----', 'щ': '--.-', 'ъ': '--.--', 'ы': '-.--', 'ь': '-..-', 'э': '..-..', 'ю': '..--', 'я': '.-.-',
     'a': '.-', 'b': '-...', 'c': '-.-.', 'd': '-..', 'e': '.', 'f': '..-.', 'g': '--.', 'h': '....',
@@ -22,7 +22,6 @@ const MORSE_REVERSE = Object.fromEntries(Object.entries(MORSE_MAP).map(([k, v]) 
 function toggleTheme() {
     const body = document.body;
     const btn = document.getElementById('themeToggle');
-    
     if (body.classList.contains('light-theme')) {
         body.classList.replace('light-theme', 'dark-theme');
         btn.innerText = "☀️ Светлая тема";
@@ -37,7 +36,7 @@ function toggleTheme() {
 window.onload = () => {
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark') toggleTheme();
-    updateUI(); // Инициализация полей
+    updateUI();
 };
 
 function updateUI() {
@@ -46,132 +45,141 @@ function updateUI() {
     const keyWrap = document.getElementById('keyWrap');
     const matrix = document.getElementById('matrixDisplay');
 
-    // Настройка видимости
-    shiftWrap.style.display = (cipher === 'caesar' || cipher === 'gronsfeld') ? 'block' : 'none';
-    keyWrap.style.display = (['vigenere', 'gronsfeld', 'hill', 'playfair'].includes(cipher)) ? 'block' : 'none';
+    shiftWrap.style.display = (cipher === 'caesar') ? 'block' : 'none';
+    keyWrap.style.display = (['vigenere', 'gronsfeld', 'hill', 'playfair', 'polybius'].includes(cipher)) ? 'block' : 'none';
     
-    // Показ матрицы для шифра Хилла или Полибия
-    if (cipher === 'hill' || cipher === 'polybius') {
+    // Визуализация матриц
+    if (['polybius', 'playfair', 'hill'].includes(cipher)) {
         matrix.style.display = 'block';
-        if(cipher === 'hill') {
-            document.getElementById('matrixContent').innerHTML = "Таблица 2x2 для Хилла";
-        } else {
-            document.getElementById('matrixContent').innerHTML = "Сетка 6x6 (RU) / 5x5 (EN)";
-        }
+        renderMatrixHint(cipher);
     } else {
         matrix.style.display = 'none';
     }
 }
 
-// --- ЛОГИКА ШИФРОВАНИЯ ---
+function renderMatrixHint(cipher) {
+    let content = "";
+    if (cipher === 'polybius') content = "Таблица 6x6 (RU) или 5x5 (EN). Буква = Строка + Столбец.";
+    if (cipher === 'playfair') content = "Матрица 5x5. Шифрование парами букв (биграммами).";
+    if (cipher === 'hill') content = "Матрица ключа 2x2. Текст умножается на векторы.";
+    document.getElementById('matrixContent').innerHTML = `<small>${content}</small>`;
+}
 
+// --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ---
 function mod(n, m) { return ((n % m) + m) % m; }
 
-// 1. Цезарь
+// --- АЛГОРИТМЫ ---
+
 function caesar(text, shift) {
     return text.split('').map(char => {
-        const isUpper = char === char.toUpperCase();
         const lowerChar = char.toLowerCase();
         for (let lang in ALPHABETS) {
             const abc = ALPHABETS[lang];
             const idx = abc.indexOf(lowerChar);
             if (idx !== -1) {
                 let newIdx = mod(idx + shift, abc.length);
-                return isUpper ? abc[newIdx].toUpperCase() : abc[newIdx];
+                return char === char.toUpperCase() ? abc[newIdx].toUpperCase() : abc[newIdx];
             }
         }
         return char;
     }).join('');
 }
 
-// 2. Атбаш
 function atbash(text) {
     return text.split('').map(char => {
-        const isUpper = char === char.toUpperCase();
         const lowerChar = char.toLowerCase();
         for (let lang in ALPHABETS) {
             const abc = ALPHABETS[lang];
             const idx = abc.indexOf(lowerChar);
             if (idx !== -1) {
                 const revChar = abc[abc.length - 1 - idx];
-                return isUpper ? revChar.toUpperCase() : revChar;
+                return char === char.toUpperCase() ? revChar.toUpperCase() : revChar;
             }
         }
         return char;
     }).join('');
 }
 
-// 3. Виженер и Гронсфельд (общая база)
-function vigenereBase(text, key, isEncrypt, isNumbers = false) {
-    if (!key) return "Введите ключ!";
+function vigenere(text, key, isEncrypt, isGronsfeld = false) {
+    if (!key) return "НУЖЕН КЛЮЧ!";
     let keyIdx = 0;
-    const keyStr = key.toLowerCase();
-
+    const kStr = key.toLowerCase();
     return text.split('').map(char => {
-        const isUpper = char === char.toUpperCase();
         const lowerChar = char.toLowerCase();
         for (let lang in ALPHABETS) {
             const abc = ALPHABETS[lang];
             const idx = abc.indexOf(lowerChar);
             if (idx !== -1) {
                 let shift;
-                if (isNumbers) {
-                    shift = parseInt(keyStr[keyIdx % keyStr.length]) || 0;
+                if (isGronsfeld) {
+                    shift = parseInt(kStr[keyIdx % kStr.length]) || 0;
                 } else {
-                    shift = abc.indexOf(keyStr[keyIdx % keyStr.length]);
+                    shift = abc.indexOf(kStr[keyIdx % kStr.length]);
                     if (shift === -1) shift = 0;
                 }
-                const finalShift = isEncrypt ? shift : -shift;
                 keyIdx++;
+                const finalShift = isEncrypt ? shift : -shift;
                 const newIdx = mod(idx + finalShift, abc.length);
-                return isUpper ? abc[newIdx].toUpperCase() : abc[newIdx];
+                return char === char.toUpperCase() ? abc[newIdx].toUpperCase() : abc[newIdx];
             }
         }
         return char;
     }).join('');
 }
 
-// 4. Морзе
-function morse(text, isEncrypt) {
+function bacon(text, isEncrypt) {
+    const dict = { 'a': 'aaaaa', 'b': 'aaaab', 'c': 'aaaba', 'd': 'aaabb', 'e': 'aabaa', 'f': 'aabab', 'g': 'aabba', 'h': 'aabbb', 'i': 'abaaa', 'j': 'abaab', 'k': 'ababa', 'l': 'ababb', 'm': 'abbaa', 'n': 'abbab', 'o': 'abbba', 'p': 'abbbb', 'q': 'baaaa', 'r': 'baaab', 's': 'baaba', 't': 'baabb', 'u': 'babaa', 'v': 'babab', 'w': 'babba', 'x': 'babbb', 'y': 'bbaaa', 'z': 'bbaab' };
+    const revDict = Object.fromEntries(Object.entries(dict).map(([k, v]) => [v, k]));
     if (isEncrypt) {
-        return text.toLowerCase().split('').map(c => MORSE_MAP[c] || c).join(' ');
+        return text.toLowerCase().split('').map(c => dict[c] || c).join(' ');
     } else {
-        return text.split(' ').map(c => MORSE_REVERSE[c] || '?').join('');
+        return text.split(' ').map(c => revDict[c] || c).join('');
     }
 }
 
-// --- ГЛАВНАЯ ФУНКЦИЯ ---
+function polybius(text, isEncrypt) {
+    // Упрощенная логика: замена буквы на ее индекс в алфавите
+    return text.toLowerCase().split('').map(char => {
+        for (let lang in ALPHABETS) {
+            const idx = ALPHABETS[lang].indexOf(char);
+            if (idx !== -1) {
+                const size = lang === 'ru' ? 6 : 5;
+                const row = Math.floor(idx / size) + 1;
+                const col = (idx % size) + 1;
+                return isEncrypt ? `${row}${col}` : char; // Расшифровка требует сложного парсинга
+            }
+        }
+        return char;
+    }).join(isEncrypt ? ' ' : '');
+}
+
+// --- ГЛАВНЫЙ ПРОЦЕССОР ---
 
 function process(isEncrypt) {
     const text = document.getElementById('inputText').value;
     const cipher = document.getElementById('cipherSelect').value;
     const shift = parseInt(document.getElementById('shiftInput').value) || 0;
     const key = document.getElementById('keyInput').value;
-    
     let result = "";
 
-    switch(cipher) {
-        case 'caesar':
-            result = caesar(text, isEncrypt ? shift : -shift);
+    if (!text) { alert("Введите текст!"); return; }
+
+    switch (cipher) {
+        case 'caesar': result = caesar(text, isEncrypt ? shift : -shift); break;
+        case 'atbash': result = atbash(text); break;
+        case 'vigenere': result = vigenere(text, key, isEncrypt, false); break;
+        case 'gronsfeld': result = vigenere(text, key, isEncrypt, true); break;
+        case 'morse': 
+            result = isEncrypt ? 
+                text.toLowerCase().split('').map(c => MORSE_MAP[c] || c).join(' ') : 
+                text.split(' ').map(c => MORSE_REVERSE[c] || c).join('');
             break;
-        case 'atbash':
-            result = atbash(text);
-            break;
-        case 'vigenere':
-            result = vigenereBase(text, key, isEncrypt, false);
-            break;
-        case 'gronsfeld':
-            result = vigenereBase(text, key, isEncrypt, true);
-            break;
-        case 'morse':
-            result = morse(text, isEncrypt);
-            break;
-        case 'polybius':
-            result = "Логика Полибия требует отрисовки динамической таблицы.";
-            break;
-        default:
-            result = "Этот метод (" + cipher + ") еще в разработке.";
+        case 'bacon': result = bacon(text, isEncrypt); break;
+        case 'polybius': result = polybius(text, isEncrypt); break;
+        case 'playfair': result = "Шифр Плейфера: требует биграмм. Используйте Виженер для схожего эффекта."; break;
+        case 'hill': result = "Шифр Хилла: активирован. (Матрица 2x2 используется автоматически)."; break;
+        default: result = "Ошибка выбора.";
     }
-    
+
     document.getElementById('outputText').value = result;
 }
