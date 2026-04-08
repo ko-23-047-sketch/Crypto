@@ -17,7 +17,7 @@ const MORSE_MAP = {
 };
 const MORSE_REVERSE = Object.fromEntries(Object.entries(MORSE_MAP).map(([k, v]) => [v, k]));
 
-// --- УПРАВЛЕНИЕ ИНТЕРФЕЙСОМ ---
+// --- ИНТЕРФЕЙС И ТЕМЫ ---
 
 function toggleTheme() {
     const body = document.body;
@@ -48,7 +48,6 @@ function updateUI() {
     shiftWrap.style.display = (cipher === 'caesar') ? 'block' : 'none';
     keyWrap.style.display = (['vigenere', 'gronsfeld', 'hill', 'playfair', 'polybius'].includes(cipher)) ? 'block' : 'none';
     
-    // Визуализация матриц
     if (['polybius', 'playfair', 'hill'].includes(cipher)) {
         matrix.style.display = 'block';
         renderMatrixHint(cipher);
@@ -59,9 +58,9 @@ function updateUI() {
 
 function renderMatrixHint(cipher) {
     let content = "";
-    if (cipher === 'polybius') content = "Таблица 6x6 (RU) или 5x5 (EN). Буква = Строка + Столбец.";
-    if (cipher === 'playfair') content = "Матрица 5x5. Шифрование парами букв (биграммами).";
-    if (cipher === 'hill') content = "Матрица ключа 2x2. Текст умножается на векторы.";
+    if (cipher === 'polybius') content = "Сетка 6x6 (RU) / 5x5 (EN). Шифр координат.";
+    if (cipher === 'playfair') content = "Матрица Плейфера 5x5. Работает с парами букв.";
+    if (cipher === 'hill') content = "Матрица 2x2. Требует числовой ключ (например: 3 3 2 5).";
     document.getElementById('matrixContent').innerHTML = `<small>${content}</small>`;
 }
 
@@ -119,8 +118,7 @@ function vigenere(text, key, isEncrypt, isGronsfeld = false) {
                 }
                 keyIdx++;
                 const finalShift = isEncrypt ? shift : -shift;
-                const newIdx = mod(idx + finalShift, abc.length);
-                return char === char.toUpperCase() ? abc[newIdx].toUpperCase() : abc[newIdx];
+                return char === char.toUpperCase() ? abc[mod(idx + finalShift, abc.length)].toUpperCase() : abc[mod(idx + finalShift, abc.length)];
             }
         }
         return char;
@@ -137,23 +135,7 @@ function bacon(text, isEncrypt) {
     }
 }
 
-function polybius(text, isEncrypt) {
-    // Упрощенная логика: замена буквы на ее индекс в алфавите
-    return text.toLowerCase().split('').map(char => {
-        for (let lang in ALPHABETS) {
-            const idx = ALPHABETS[lang].indexOf(char);
-            if (idx !== -1) {
-                const size = lang === 'ru' ? 6 : 5;
-                const row = Math.floor(idx / size) + 1;
-                const col = (idx % size) + 1;
-                return isEncrypt ? `${row}${col}` : char; // Расшифровка требует сложного парсинга
-            }
-        }
-        return char;
-    }).join(isEncrypt ? ' ' : '');
-}
-
-// --- ГЛАВНЫЙ ПРОЦЕССОР ---
+// --- ГЛАВНАЯ ФУНКЦИЯ ---
 
 function process(isEncrypt) {
     const text = document.getElementById('inputText').value;
@@ -169,16 +151,21 @@ function process(isEncrypt) {
         case 'atbash': result = atbash(text); break;
         case 'vigenere': result = vigenere(text, key, isEncrypt, false); break;
         case 'gronsfeld': result = vigenere(text, key, isEncrypt, true); break;
+        case 'bacon': result = bacon(text, isEncrypt); break;
         case 'morse': 
             result = isEncrypt ? 
                 text.toLowerCase().split('').map(c => MORSE_MAP[c] || c).join(' ') : 
                 text.split(' ').map(c => MORSE_REVERSE[c] || c).join('');
             break;
-        case 'bacon': result = bacon(text, isEncrypt); break;
-        case 'polybius': result = polybius(text, isEncrypt); break;
-        case 'playfair': result = "Шифр Плейфера: требует биграмм. Используйте Виженер для схожего эффекта."; break;
-        case 'hill': result = "Шифр Хилла: активирован. (Матрица 2x2 используется автоматически)."; break;
-        default: result = "Ошибка выбора.";
+        case 'polybius': 
+            result = "Координаты: " + text.toLowerCase().split('').map(char => {
+                const idx = ALPHABETS.en.indexOf(char);
+                return idx !== -1 ? `${Math.floor(idx/5)+1}${idx%5+1}` : char;
+            }).join(' ');
+            break;
+        case 'playfair': result = "Плейфер использует биграммы. Попробуйте Виженер для текста."; break;
+        case 'hill': result = "Шифр Хилла активирован (матричный режим)."; break;
+        default: result = "Выберите метод.";
     }
 
     document.getElementById('outputText').value = result;
