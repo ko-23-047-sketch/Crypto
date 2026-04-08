@@ -1,93 +1,78 @@
-/* Переменные для тем */
 :root {
-    --bg-color: #f4f4f9;
-    --container-bg: #ffffff;
-    --text-color: #333333;
-    --border-color: #cccccc;
-    --accent-color: #4CAF50;
-    --btn-secondary: #2196F3;
+    --bg: #f0f2f5;
+    --card: #ffffff;
+    --text: #1a1a1a;
+    --border: #dce0e5;
+    --primary: #4caf50;
+    --secondary: #2196f3;
 }
 
 body.dark-theme {
-    --bg-color: #121212;
-    --container-bg: #1e1e1e;
-    --text-color: #e0e0e0;
-    --border-color: #444444;
+    --bg: #121212;
+    --card: #1e1e1e;
+    --text: #e0e0e0;
+    --border: #333333;
 }
 
-/* Общие стили */
 body {
-    background-color: var(--bg-color);
-    color: var(--text-color);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    transition: all 0.3s ease;
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
     margin: 0;
+    padding: 20px;
     display: flex;
     justify-content: center;
-    padding: 20px;
+    transition: 0.3s;
 }
 
 .container {
-    background: var(--container-bg);
+    background: var(--card);
     width: 100%;
-    max-width: 900px;
-    padding: 25px;
-    border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    max-width: 850px;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
 }
 
 .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
-}
-
-/* Адаптивность для мобильных устройств */
-@media (max-width: 600px) {
-    .controls {
-        grid-template-columns: 1fr !important; /* В одну колонку */
-    }
-    .header {
-        flex-direction: column;
-        gap: 10px;
-    }
-    .buttons {
-        flex-direction: column;
-    }
+    margin-bottom: 25px;
 }
 
 .controls {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
     margin: 20px 0;
 }
 
 .control-group {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 5px;
 }
 
 textarea {
     width: 100%;
     height: 120px;
-    background: var(--container-bg);
-    color: var(--text-color);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
     padding: 12px;
-    box-sizing: border-box;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card);
+    color: var(--text);
+    resize: vertical;
     font-size: 16px;
+    box-sizing: border-box;
 }
 
 input, select {
     padding: 10px;
-    border-radius: 6px;
-    border: 1px solid var(--border-color);
-    background: var(--container-bg);
-    color: var(--text-color);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text);
 }
 
 .buttons {
@@ -98,23 +83,30 @@ input, select {
 
 .btn {
     flex: 1;
-    padding: 15px;
+    padding: 14px;
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    font-weight: bold;
-    transition: opacity 0.2s;
+    font-weight: 600;
+    color: white;
 }
 
-.btn:hover { opacity: 0.8; }
-.encrypt-btn { background: var(--accent-color); color: white; }
-.decrypt-btn { background: var(--btn-secondary); color: white; }
+.encrypt-btn { background: var(--primary); }
+.decrypt-btn { background: var(--secondary); }
+
+.matrix-container {
+    margin-top: 15px;
+    padding: 15px;
+    background: rgba(0,0,0,0.05);
+    border-radius: 8px;
+    display: none;
+}
 
 #themeToggle {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text);
     padding: 8px 15px;
     border-radius: 20px;
-    border: 1px solid var(--border-color);
     cursor: pointer;
-    background: var(--container-bg);
-    color: var(--text-color);
 }
